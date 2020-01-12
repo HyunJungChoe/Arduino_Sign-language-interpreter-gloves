@@ -1,0 +1,351 @@
+#include <SoftwareSerial.h>
+SoftwareSerial hc06(5,4);
+
+//자이로
+const int xPin = A5; // X
+const int yPin = A6; // Y
+const int zPin = A7; // Z
+int minVal = 265;
+int maxVal = 402;
+double x;
+double y;
+double z;
+
+// flex
+int flexpin_1 = A4; //센서와 연결된 아날로그 핀 설정
+int flexpin_2 = A3;
+int flexpin_3 = A2;
+int flexpin_4 = A1;
+int flexpin_5 = A0;
+
+int sensorMin1 = 1023; 
+int sensorMax1 = 0;
+
+int sensorMin2 = 1023; 
+int sensorMax2 = 0;
+
+int sensorMin3 = 1023; 
+int sensorMax3 = 0;
+
+int sensorMin4 = 1023; 
+int sensorMax4 = 0;
+
+int sensorMin5 = 1023; 
+int sensorMax5 = 0;
+
+char temp = '0';
+
+////variable initializtion
+//int xpin = A5;
+//int xadc = 0;
+//int xmax = 0;
+//int xmin = 1023;
+//
+//int ypin = A6;
+//int yadc = 0;
+//int ymax = 0;
+//int ymin = 1023;
+
+void setup() {
+    Serial.begin(9600); // 시리얼 통신 속도를 9600로 설정.
+    hc06.begin(9600);
+    //analogReference(EXTERNAL);
+}
+
+void loop() {
+
+   //hc06에서 모니터로 데이터 쓰기
+  if (hc06.available()){
+    Serial.write(hc06.read());
+  }
+  
+  //시리얼 모니터네서 hc06으로 데이터 쓰기
+  if (Serial.available()){
+    hc06.write(Serial.read());
+  }  
+
+
+  // flex
+  int flexVal_1;  //센서값을 저장할 변수 설정
+  int flexVal_2; 
+  int flexVal_3;
+  int flexVal_4;
+  int flexVal_5;
+  
+  // 자이로
+  int xRead = analogRead(xPin);
+  int yRead = analogRead(yPin);
+  int zRead = analogRead(zPin);
+  int xAng = map(xRead, minVal, maxVal, -90, 90);
+  int yAng = map(yRead, minVal, maxVal, -90, 90);
+  int zAng = map(zRead, minVal, maxVal, -90, 90);
+  
+  x = RAD_TO_DEG * (atan2(-yAng, -zAng) + PI);
+  y = RAD_TO_DEG * (atan2(-xAng, -zAng) + PI);
+  z = RAD_TO_DEG * (atan2(-yAng, -xAng) + PI);
+  
+  flexVal_1 = (1023-analogRead(flexpin_1))/5;    // 센서로 부터 보내오는 값을 입력 받는다.(0-1023) 값이 반대로 나옴 
+  Serial.print("sensor_1: ");
+  Serial.println(flexVal_1);  // sensor:0000로 출력한다(0000값은 센서로 부터 읽어 온 값)
+
+  flexVal_2 = (1023-analogRead(flexpin_2))/5;
+  Serial.print("sensor_2: ");
+  Serial.println(flexVal_2); 
+
+  flexVal_3 = (1023-analogRead(flexpin_3))/5;
+  Serial.print("sensor_3: ");
+  Serial.println(flexVal_3); 
+
+  flexVal_4 = (1023-analogRead(flexpin_4))/5;
+  Serial.print("sensor_4: ");
+  Serial.println(flexVal_4); 
+
+  flexVal_5 = (1023-analogRead(flexpin_5))/5;
+  Serial.print("sensor_5: ");
+  Serial.println(flexVal_5); 
+
+  Serial.print("x: ");
+  Serial.print(x);
+  
+  Serial.print(" | y: ");
+  Serial.println(y);
+
+  if((y>=30)&&(y<=50)&&(flexVal_1<50)&&(flexVal_2<50)&&(flexVal_3<50)&&(flexVal_4<50)&&(flexVal_5<50)) 
+  {
+    Serial.println("Hello");  
+     hc06.write("Hello, 안녕하세요"); 
+  }
+    if((x>=200)&&(x<=280)&&(flexVal_1<50)&&(flexVal_2<50)&&(flexVal_3<50)&&(flexVal_4<50)&&(flexVal_5<50)) 
+  {
+    Serial.println("thanks");  
+     hc06.write("thanks, 감사합니다"); 
+  }
+      if((x>=200)&&(x<=280)&&(flexVal_1<50)&&(flexVal_2<80)&&(flexVal_3>=150)&&(flexVal_4>=150)&&(flexVal_5<50)) 
+  {
+    Serial.println("I love you");  
+     hc06.write("I love you, 사랑해"); 
+  }
+
+
+//// 가속도 센서 관련 
+//float angle1= map(flexVal_1, sensorMin1, sensorMax1, 0, 90);
+//float angle2= map(flexVal_2, sensorMin2, sensorMax2, 0, 90);
+//float angle3= map(flexVal_3, sensorMin3, sensorMax3, 0, 90);
+//float angle4= map(flexVal_4, sensorMin4, sensorMax4, 0, 90);
+//float angle5= map(flexVal_5, sensorMin5, sensorMax5, 0, 90); 
+
+// 알고리즘 코딩 관련
+
+if(  (flexVal_1<50)&&(flexVal_2>=150)&&(flexVal_3>=150)&&(flexVal_4>=150)&&(flexVal_5>=150) )
+{
+  hc06.write('A');
+  Serial.println('A');
+}
+
+
+
+if(  (flexVal_1>150)&&(flexVal_2<90)&&(flexVal_3<90)&&(flexVal_4<80)&&(flexVal_5<80) )
+{
+  hc06.write('B');
+  Serial.println('B');
+  
+  }
+
+//C (2,3 번째 손가락만 쌔게 접기)
+if(  (((flexVal_1<50)&&((flexVal_2>=50)&&(flexVal_2<=180))&&((flexVal_3>=50)&&(flexVal_3<=180))&&(flexVal_4<=100)))&&(flexVal_5<100))
+{
+ hc06.write('C'); 
+Serial.println('C');
+ 
+  }
+
+//D : 평행 일 때 .엄지도 쌔게 접기
+if(  (x<50)&&(y<50)&&(flexVal_1>100)&&(flexVal_2<100)&&(flexVal_3>150)&&(flexVal_4>150)&&(flexVal_5>150) )
+{
+   hc06.write('D');
+ Serial.println('D');
+ 
+  }
+  
+// E 주먹
+ if(  ( (x<19)&&(y<=20)&&(flexVal_1>50)&&(flexVal_2>=130)&&(flexVal_3>=130)&&(flexVal_4>=130)&&(flexVal_5>=130)))
+{
+   hc06.write('E');
+ Serial.println('E');
+   
+  }
+
+//F : 엄지 쌔게 접기 
+if  ((flexVal_1>=50)&&(flexVal_2>=150)&&(flexVal_3<=50)&&(flexVal_4<=50)&&(flexVal_5<=80) )
+{
+   hc06.write('F');
+ Serial.println('F');
+ 
+  }
+
+
+//G 손바닥 뒤집기(D + 각도 ) 
+if(  (x>=200)&&(x<300)&&(flexVal_1>100)&&(flexVal_2<100)&&(flexVal_3>150)&&(flexVal_4>150)&&(flexVal_5>=130) )
+{
+   hc06.write('G');
+ Serial.println('G');
+ 
+  }
+
+//H 손바닥 뒤집기  (K + 자이로)
+if(  (x>=200)&&(x<300)&&(flexVal_1>=100)&&(flexVal_2<100)&&(flexVal_3<100)&&(flexVal_4>=150)&&(flexVal_5>=130) )
+{
+   hc06.write('H');
+ Serial.println('H');
+ 
+  }
+
+//I (엄지 접고, 검지 강하게 누르기)
+if(  (x<100)&&(flexVal_1>100)&&(flexVal_2>100)&&(flexVal_3>100)&&(flexVal_4>100)&&(flexVal_5<50) )
+{
+   hc06.write('I');
+ Serial.println('I');
+ 
+  }
+//J 손바닥 뒤집기 (I + 자이로 센서)
+if(  (x>=100)&&(x<300)&&(flexVal_1>100)&&(flexVal_2>100)&&(flexVal_3>100)&&(flexVal_4>100)&&(flexVal_5<50) )
+{
+   hc06.write('J');
+ Serial.println('J');
+ 
+  }
+//K 수평
+if( (x<19)&&(y<=20)&& (flexVal_1>=100)&&(flexVal_2<100)&&(flexVal_3<100)&&(flexVal_4>=150)&&(flexVal_5>=120) )
+{
+   hc06.write('K');
+ Serial.println('K');
+ 
+  }
+
+//L : 손목 살짝 들기
+if(  (y<20)&&(flexVal_1<80)&&(flexVal_2<80)&&(flexVal_3>=150)&&(flexVal_4>=150)&&(flexVal_5>=120) )
+{
+   hc06.write('L');
+ Serial.println('L');
+ 
+  }
+
+// M : E+ 각도 뒤집기
+ if(  ((x>=100)&&(x<=300)&&(flexVal_1>=130)&&(flexVal_2>=130)&&(flexVal_3>=130)&&(flexVal_4>=130)&&(flexVal_5>=130)))
+{
+  
+   hc06.write('M');
+ Serial.println('M');
+   
+  }
+
+//N : E +각도 왼쪽 
+ if(  ((x>=20 )&&(x <=60)&&(flexVal_1>=130)&&(flexVal_2>=130)&&(flexVal_3>=130)&&(flexVal_4>=130)&&(flexVal_5>=130)))
+{
+  
+   hc06.write('N');
+ Serial.println('N');
+   
+  }
+
+//O (2,3 번째 손가락만 쌔게 접기)
+if(  (((flexVal_1>50)&&((flexVal_2>=50)&&(flexVal_2<=190))&&((flexVal_3>=50)&&(flexVal_3<=190))&&(flexVal_4<=50)))&&(flexVal_5<50))
+{
+   hc06.write('O');
+ Serial.println('O');
+ 
+  }
+  
+// P : (1, 2, 3 펴고 4,5 접기)
+if  ((flexVal_1<80)&&(flexVal_2< 80)&&(flexVal_3<80)&&(flexVal_4>150)&&(flexVal_5>150) )
+{
+   hc06.write('P');
+ Serial.println('P');
+ 
+  }
+
+//Q : L자에서 손목 아래로 내리기 
+if(  (y>=30)&&(y<=50)&&(flexVal_1<80)&&(flexVal_2<80)&&(flexVal_3>=150)&&(flexVal_4>=150)&&(flexVal_5>=120) )
+{
+   hc06.write('Q');
+ Serial.println('Q');
+ 
+  }
+//R : 오른쪽 수직
+if( (x>=300)&&(x<=361)&&(y<30)&& (flexVal_1>=100)&&(flexVal_2<100)&&(flexVal_3<100)&&(flexVal_4>=150)&&(flexVal_5>=120) )
+{
+   hc06.write('R');
+ Serial.println('R');
+ 
+  }
+
+//S: E + 오른쪽
+ if(  ( (x>=300)&&(x<=361)&&(y<30)&&(flexVal_1>=130)&&(flexVal_2>=130)&&(flexVal_3>=130)&&(flexVal_4>=130)&&(flexVal_5>=130)))
+{
+  
+   hc06.write('S');
+ Serial.println('S');
+   
+  }
+
+//T : E + 아래 
+ if(  ((x<40)&&(y>=30)&&(flexVal_1>=130)&&(flexVal_2>=130)&&(flexVal_3>=130)&&(flexVal_4>=130)&&(flexVal_5>=130)))
+{
+  
+   hc06.write('T');
+ Serial.println('T');
+   
+  }
+
+//U 왼쪽
+if(  (x>=20 )&&(x <=60)&&(flexVal_1>=100)&&(flexVal_2<80)&&(flexVal_3<100)&&(flexVal_4>=150)&&(flexVal_5>=120) )
+{
+   hc06.write('U');
+ Serial.println('U');
+}
+//V : 아래
+if(  (x<40)&&(y>=30)&&(flexVal_1>=100)&&(flexVal_2<80)&&(flexVal_3<100)&&(flexVal_4>=150)&&(flexVal_5>=120) )
+{
+   hc06.write('V');
+ Serial.println('V');
+}
+
+//W
+if(  (flexVal_1>=100)&&(flexVal_2<100)&&(flexVal_3<100)&&(flexVal_4<100)&&(flexVal_5>=130) )
+{
+   hc06.write('W');
+ Serial.println('W');
+ 
+  }
+
+//X = 7
+if(  (flexVal_1>=100)&&(flexVal_2<50)&&(flexVal_3<100)&&(flexVal_4>=150)&&(flexVal_5<100) )
+{
+   hc06.write('X');
+ Serial.println('X');
+ 
+  }
+
+
+
+
+//Y (엄지 펴고, 검지 강하게 누르기)
+if(  (flexVal_1<50)&&(flexVal_2>100)&&(flexVal_3>100)&&(flexVal_4>100)&&(flexVal_5<100) )
+{
+   hc06.write('Y');
+ Serial.println('Y');
+ 
+  }
+
+//Z = 8
+if(  (flexVal_1<50)&&(flexVal_2<50)&&(flexVal_3>150)&&(flexVal_4<50)&&(flexVal_5<100) )
+{
+   hc06.write('Z');
+ Serial.println('Z');
+ 
+  }
+
+
+
+  delay(3500);
+}
